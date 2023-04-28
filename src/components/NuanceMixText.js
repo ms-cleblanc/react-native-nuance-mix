@@ -22,6 +22,7 @@ const NuanceMixText = ({
   language,
   model,
   ssml,
+  TTS,
   ...rest
 }) => {
 
@@ -48,12 +49,19 @@ const NuanceMixText = ({
     <View style={viewStyle}
       {...rest}
     >
-      <Text style={style}
-        onPress={playTts}
-        {...rest}
-      >{children}
-      </Text>
+      {TTS ? <TTS style={style} playTts={playTts} children={children} {...rest} /> : 
+              <DefaultTTS style={style} playTts={playTts} children={children} {...rest} />}
     </View>
+  );
+};
+
+function DefaultTTS({ style, playTts, children, ...rest }) {
+  return (
+    <Text style={style}
+      onPress={playTts}
+      {...rest}
+    >{children}
+    </Text>
   );
 };
 
@@ -62,14 +70,16 @@ NuanceMixText.defaultProps = {
   language: "en-us",
   model: "enhanced",
   ssml: null,
+  TTS: DefaultTTS,
 };
 
 NuanceMixText.propTypes = {
-  children: PropTypes.node.isRequired,
+  children: PropTypes.node,
   voice: PropTypes.string,
   language: PropTypes.string,
   model: PropTypes.string,
   ssml: PropTypes.string,
+  TTS: PropTypes.func,
 };
 
 export default NuanceMixText;
