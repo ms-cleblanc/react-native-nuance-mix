@@ -17,7 +17,8 @@ import PropTypes from "prop-types";
 const NuanceMixInput = ({
   style,
   viewStyle,
-  component,
+  Listener,
+  Input,
   initialText,
   language,
   ...rest
@@ -52,25 +53,34 @@ const NuanceMixInput = ({
   // Return
   return (
     <View style={viewStyle}>
-      <TextInput style={style}
-        {...rest}
-        onChangeText={text => onChangeText(text)}
-        value={value}
-      />
-      {React.cloneElement(component, {onPress:recognize})}
+      {Input ? <Input style={style} {...rest} value={value} onChangeText={(text) => onChangeText(text)} /> : 
+              <DefaultInput style={style} {...rest} value={value} onChangeText={(text) => onChangeText(text)} />}
+      {React.cloneElement(Listener, {onPress:recognize})}
     </View>
   );
 };
 
+function DefaultInput({ style, value, onChangeText }) {
+  return (
+    <TextInput
+      style={style}
+      value={value}
+      onChangeText={(text) => onChangeText(text)}
+    />
+  )
+}
+
 NuanceMixInput.defaultProps = {
   initialText: "",
   language: null,
+  Input: DefaultInput,
 }
 
 NuanceMixInput.propTypes = {
   viewStyle: PropTypes.object,
   initialText: PropTypes.string,
-  component: PropTypes.object.isRequired,
+  Listener: PropTypes.object.isRequired,
+  Input: PropTypes.func,
   language: PropTypes.string,
 };
 
