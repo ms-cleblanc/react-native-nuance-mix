@@ -41,13 +41,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/nuance-communications/mix-react-native-mobile",
-  "author": "Chris LeBlanc <chris.leblanc@nuance.com> (https://github.com/cleblanc-nuance)",
+  "repository": "https://github.com/ms-cleblanc/react-native-nuance-mix",
+  "author": "Chris LeBlanc <chrisleblanc@microsoft.com (https://github.com/ms-cleblanc)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nuance-communications/mix-react-native-mobile/issues"
+    "url": "https://github.com/ms-cleblanc/react-native-nuance-mix/issues"
   },
-  "homepage": "https://github.com/nuance-communications/mix-react-native-mobile#readme",
+  "homepage": "https://github.com/ms-cleblanc/react-native-nuance-mix#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
