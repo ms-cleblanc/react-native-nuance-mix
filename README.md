@@ -1,6 +1,6 @@
 # react-native-nuance-mix 
 
-A react-native node module plugin for Android and iOS providing access to Nuance Mix as a service
+A react-native node module plugin for Android and iOS providing access to Nuance Mix as a service. Head on over to [Mix](https://mix.nuance.com/v3/landing/) and signup for a free account there. You'll need to add your Mix credentials to your mobile app. You can see an [example](https://github.com/ms-cleblanc/NuanceMixReactNativeDemo) project with more details.
 
 ## Installation
 
