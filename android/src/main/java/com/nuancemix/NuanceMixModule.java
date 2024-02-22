@@ -170,8 +170,8 @@ public class NuanceMixModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void converse(String textInput, String contextTag, Promise promise) {
-    dlg.toggleReco(textInput, contextTag);
+  public void converse(String textInput, String contextTag, boolean textOnly, boolean avatar, Promise promise) {
+    dlg.toggleReco(textInput, contextTag, textOnly, avatar);
     promise.resolve(true);    
   }
 

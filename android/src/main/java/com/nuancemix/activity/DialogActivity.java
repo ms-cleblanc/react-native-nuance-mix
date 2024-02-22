@@ -17,6 +17,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value.Builder;
 
+import com.nuance.coretech.dialog.v1.common.messages.ContinueAction;
 import com.nuance.coretech.dialog.v1.common.messages.DAAction;
 import com.nuance.coretech.dialog.v1.common.messages.ExecuteRequestPayload;
 import com.nuance.coretech.dialog.v1.common.messages.ExecuteResponsePayload;
@@ -115,6 +116,9 @@ public class DialogActivity {
     private String contextTag;
     private String language;
 
+    private boolean textOnly;
+    private boolean avatar;
+
     public DialogActivity(Context context) {
         loadDialog(context);
     }
@@ -133,7 +137,9 @@ public class DialogActivity {
     }
 
     /* State Logic: IDLE -> RESPONDING -> PLAYING -> LISTENING -> PROCESSING -> RESPONDING repeat */
-    public void toggleReco(String input, String contextTag) {
+    public void toggleReco(String input, String contextTag, boolean textOnly, boolean avatar) {
+        textOnly = textOnly;
+        avatar = avatar;
         Log.d(TAG, "toggleReco state " + mState.toString() + " with input " + input + " and contextTag " + contextTag);
         switch (mState) {
         case IDLE:
@@ -424,9 +430,17 @@ public class DialogActivity {
 
         final ExecuteRequest request = ExecuteRequest.newBuilder().setPayload(payload).setSelector(selector)
                 .setSessionId(sessionId).build();
-        final StreamInput streamInput = StreamInput.newBuilder().setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+        if (textOnly) {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setRequest(request).build();
 
-        ExecuteStream(streamInput, true, false);
+            ExecuteStream(streamInput, false, false);
+        } else {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+
+            ExecuteStream(streamInput, true, false);
+        }
     }
 
 
@@ -509,6 +523,12 @@ public class DialogActivity {
             NuanceMixModule.dialogResponse(prompt);
             Log.d(TAG, prompt);
         }
+
+        if (payload.hasContinueAction()) {
+            ExecuteContinueAction(payload.getContinueAction());
+            //throw new UnsupportedOperationException("Continue action not implemented");
+        }
+
         if (payload.hasEndAction()) {
             dialogEnding = true;
         }
@@ -516,6 +536,81 @@ public class DialogActivity {
             NuanceMixModule.dialogEnded();
             setState(State.IDLE);
         }
+    }
+
+    private void ExecuteContinueAction(ContinueAction continueAction) {
+        String promptText = "";
+        String promptSeparator = " ";
+
+        if (continueAction.hasMessage()) {
+            Message msg = continueAction.getMessage();
+
+            if (msg.getVisualCount() > 0) {
+                promptText += getVisualString(msg) + promptSeparator;
+            }
+
+            if (msg.getAudioCount() > 0) {
+                logger.fine("Message has audio response. Not implemented " + msg.getAudioCount());
+                logger.fine("Message has audio response. Not implemented " + msg.getAudioList());
+                /*
+                try {
+                    mAudioSink = AudioSinkFactory.create("speaker", 22050,
+                            (IAudioSink.Listener) mAudioHandler);
+                    mAudioSink.start();
+
+                    for (final Audio resp : msg.getAudioList()) {
+                            mAudioSink.put(resp.toByteArray(),
+                                    resp.toByteArray().length);
+                    }
+                } catch (Exception e) {
+                    logger.severe(Utils.StackTraceToString(e));
+                }    
+                */            
+            }
+
+            if (msg.getNlgCount() > 0) {
+                logger.fine("Text to be played with TTS 5: " + getNlgString(msg));
+            }
+        }
+
+        if (promptText.length() > 0) {
+            promptText = promptText.substring(0, promptText.length() - 1);
+            logger.fine("Received Prompt with text " + promptText);
+            logger.info("SYSTEM PROMPT: " + promptText);
+        }
+
+        ExecuteContinue();
+    }
+
+    // Execute Continue Action
+    private void ExecuteContinue() {
+        logger.finest("EXECUTING CONTINUE INPUT REQUEST...");
+
+
+        ExecuteRequestPayload.Builder pBuilder = ExecuteRequestPayload.newBuilder();
+        ExecuteRequestPayload payload = pBuilder.build();
+
+        ExecuteRequest.Builder reqBuilder = ExecuteRequest.newBuilder();
+        ExecuteRequest request = reqBuilder.setPayload(payload)
+                                            .setSessionId(sessionId)
+                                            .build();
+
+
+        StreamInput.Builder sibuilder = StreamInput.newBuilder();
+        StreamInput streamInput;
+
+        if (ttsParams != null) {
+            streamInput = sibuilder.setTtsControlV1(ttsParams)
+                                    .setRequest(request)
+                                    .build();
+        } else {
+            streamInput = sibuilder.setRequest(request)
+                                    .build();
+        }
+
+
+        logger.finest("EXECUTING CONTINUE REQUEST...");
+        ExecuteStream(streamInput, true, false);
     }
 
     private void Respond(final String inputText, final PayloadCase payloadType, final RequestData requestData) {
@@ -538,10 +633,17 @@ public class DialogActivity {
         final ExecuteRequest request = ExecuteRequest.newBuilder().setPayload(payload).setSelector(selector)
                 .setSessionId(sessionId).build();
 
-        final StreamInput streamInput = StreamInput.newBuilder()
-                .setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+        if (textOnly) {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setRequest(request).build();
 
-        ExecuteStream(streamInput, true, false);
+            ExecuteStream(streamInput, false, false);
+        } else {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+
+            ExecuteStream(streamInput, true, false);
+        }
     }
 
     private TtsParamsV1 initializeSynthesisParameters() {

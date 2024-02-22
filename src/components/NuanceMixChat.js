@@ -25,6 +25,8 @@ const NuanceMixChat = ({
   RightBubble,
   contextTag,
   language,
+  textOnly,
+  avatar,
   ...rest
 }) => {
 
@@ -100,7 +102,7 @@ const NuanceMixChat = ({
     myModuleEvt.addListener('NuanceMixDialogPartial', handleDialogPartial);
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
-    NuanceMix.converse(value, contextTag);
+    NuanceMix.converse(value, contextTag, textOnly, avatar);
   }
   const converse = () => {
     if (idx!==1 && FooterProgress) {
@@ -114,7 +116,7 @@ const NuanceMixChat = ({
     myModuleEvt.addListener('NuanceMixDialogPartial', handleDialogPartial);
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
-    NuanceMix.converse(null, contextTag);
+    NuanceMix.converse(null, contextTag, textOnly, avatar);
   };
 
   // First time only - start the conversation.
@@ -127,7 +129,7 @@ const NuanceMixChat = ({
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
 
-    NuanceMix.converse(null, contextTag);
+    NuanceMix.converse(null, contextTag, textOnly, avatar);
 
     return () => {
       myModuleEvt.removeAllListeners('NuanceMixDialogResponse');
@@ -166,12 +168,12 @@ const NuanceMixChat = ({
               onSubmitEditing={handleSubmitEditing}
               onChangeText={(text) => onChangeText(text)}
         />)}
-      {FooterProgress && (<FooterProgress
+      {!textOnly && FooterProgress && (<FooterProgress
               isAnimating={isAnimating}
         />)}
-      {FooterListener ? (<FooterListener
+      {!textOnly && (FooterListener ? (<FooterListener
               onPress={converse}
-        />) : (<DefaultFooterListener onPress={converse}/>)}
+        />) : (<DefaultFooterListener onPress={converse}/>))}
     </View>
   );
 };
@@ -239,6 +241,8 @@ NuanceMixChat.propTypes = {
   language: PropTypes.string,
   autoStart: PropTypes.bool,
   contextTag: PropTypes.string,
+  textOnly: PropTypes.bool,
+  avatar: PropTypes.bool,
 };
 
 // Styling for the default components. Provide an iMessage-like appearance.
