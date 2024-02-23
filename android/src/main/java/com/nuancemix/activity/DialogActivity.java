@@ -17,6 +17,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value.Builder;
 
+import com.nuance.coretech.dialog.v1.common.messages.ContinueAction;
 import com.nuance.coretech.dialog.v1.common.messages.DAAction;
 import com.nuance.coretech.dialog.v1.common.messages.ExecuteRequestPayload;
 import com.nuance.coretech.dialog.v1.common.messages.ExecuteResponsePayload;
@@ -115,6 +116,9 @@ public class DialogActivity {
     private String contextTag;
     private String language;
 
+    private boolean textOnly;
+    private boolean avatar;
+
     public DialogActivity(Context context) {
         loadDialog(context);
     }
@@ -133,13 +137,15 @@ public class DialogActivity {
     }
 
     /* State Logic: IDLE -> RESPONDING -> PLAYING -> LISTENING -> PROCESSING -> RESPONDING repeat */
-    public void toggleReco(String input, String contextTag) {
+    public void toggleReco(String input, String contextTag, boolean tO, boolean A) {
+        textOnly = tO;
+        avatar = A;
         Log.d(TAG, "toggleReco state " + mState.toString() + " with input " + input + " and contextTag " + contextTag);
         switch (mState) {
         case IDLE:
             dialogEnding = false;
             setState(State.PROCESSING);
-            StartDialog(contextTag);
+            StartDialog(contextTag, textOnly, avatar);
             break;
         case RESPONDING:
             final Thread dlgThread = new Thread(new Runnable() {
@@ -233,7 +239,7 @@ public class DialogActivity {
         return stub;
     }
 
-    private void StartDialog(String context) {
+    private void StartDialog(String context, boolean textOnly, boolean avatar) {
         sessionId = null;
 
         try {
@@ -424,9 +430,17 @@ public class DialogActivity {
 
         final ExecuteRequest request = ExecuteRequest.newBuilder().setPayload(payload).setSelector(selector)
                 .setSessionId(sessionId).build();
-        final StreamInput streamInput = StreamInput.newBuilder().setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+        if (textOnly) {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setRequest(request).build();
 
-        ExecuteStream(streamInput, true, false);
+            ExecuteStream(streamInput, false, false);
+        } else {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+
+            ExecuteStream(streamInput, true, false);
+        }
     }
 
 
@@ -509,6 +523,12 @@ public class DialogActivity {
             NuanceMixModule.dialogResponse(prompt);
             Log.d(TAG, prompt);
         }
+
+        if (payload.hasContinueAction()) {
+            ExecuteContinueAction(payload.getContinueAction());
+            //throw new UnsupportedOperationException("Continue action not implemented");
+        }
+
         if (payload.hasEndAction()) {
             dialogEnding = true;
         }
@@ -516,6 +536,70 @@ public class DialogActivity {
             NuanceMixModule.dialogEnded();
             setState(State.IDLE);
         }
+    }
+
+    private String getVisualString(Message msg) {
+        String text = "";
+        for (Message.Visual visual : msg.getVisualList()) {
+            text = text + visual.getText() + "\n";
+        }
+
+        // Remove the trailing white space
+        return text.substring(0, text.length() - 1);
+    }
+
+    private void ExecuteContinueAction(ContinueAction continueAction) {
+        String promptText = "";
+        String promptSeparator = " ";
+
+        if (continueAction.hasMessage()) {
+            Message msg = continueAction.getMessage();
+
+            if (msg.getVisualCount() > 0) {
+                promptText += getVisualString(msg) + promptSeparator;
+            }
+            Log.d(TAG, "ContinueAction prompt: " + promptText);
+
+            if (msg.getAudioCount() > 0) {
+                Log.d(TAG, "ContinueAction audio: " + msg.getAudioCount());
+            }
+
+            if (msg.getNlgCount() > 0) {
+                Log.d(TAG, "ContinueAction Nlg: " + msg.getNlgCount());
+            }
+        }
+
+        if (promptText.length() > 0) {
+            promptText = promptText.substring(0, promptText.length() - 1);
+        }
+
+        ExecuteContinue();
+    }
+
+    // Execute Continue Action
+    private void ExecuteContinue() {
+        ExecuteRequestPayload.Builder pBuilder = ExecuteRequestPayload.newBuilder();
+        ExecuteRequestPayload payload = pBuilder.build();
+
+        ExecuteRequest.Builder reqBuilder = ExecuteRequest.newBuilder();
+        ExecuteRequest request = reqBuilder.setPayload(payload)
+                                            .setSessionId(sessionId)
+                                            .build();
+
+
+        StreamInput.Builder sibuilder = StreamInput.newBuilder();
+        StreamInput streamInput;
+
+        if (textOnly) {
+            streamInput = sibuilder.setRequest(request)
+                                    .build();
+
+        } else {
+            streamInput = sibuilder.setTtsControlV1(initializeSynthesisParameters())
+                                    .setRequest(request)
+                                    .build();
+        }
+        ExecuteStream(streamInput, true, false);
     }
 
     private void Respond(final String inputText, final PayloadCase payloadType, final RequestData requestData) {
@@ -538,10 +622,17 @@ public class DialogActivity {
         final ExecuteRequest request = ExecuteRequest.newBuilder().setPayload(payload).setSelector(selector)
                 .setSessionId(sessionId).build();
 
-        final StreamInput streamInput = StreamInput.newBuilder()
-                .setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+        if (textOnly) {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setRequest(request).build();
 
-        ExecuteStream(streamInput, true, false);
+            ExecuteStream(streamInput, false, false);
+        } else {
+            final StreamInput streamInput = StreamInput.newBuilder()
+                    .setTtsControlV1(initializeSynthesisParameters()).setRequest(request).build();
+
+            ExecuteStream(streamInput, true, false);
+        }
     }
 
     private TtsParamsV1 initializeSynthesisParameters() {

@@ -25,6 +25,8 @@ const NuanceMixChat = ({
   RightBubble,
   contextTag,
   language,
+  textOnly,
+  avatar,
   ...rest
 }) => {
 
@@ -94,15 +96,15 @@ const NuanceMixChat = ({
     console.log('handleDialogEnded ' + isEnded);
     setIsEnded(true);
   };
-  function handleSubmitEditing() {
+  function handleSubmitEditing(value, contextTag, textOnly, avatar) {
     myModuleEvt.addListener('NuanceMixDialogResponse', handleDialogResponse);
     myModuleEvt.addListener('NuanceMixDialogRequest', handleDialogRequest);
     myModuleEvt.addListener('NuanceMixDialogPartial', handleDialogPartial);
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
-    NuanceMix.converse(value, contextTag);
+    NuanceMix.converse(value, contextTag, textOnly, avatar);
   }
-  const converse = () => {
+  const converse = (contextTag, textOnly, avatar) => {
     if (idx!==1 && FooterProgress) {
       setIsAnimating(true);
     } 
@@ -114,11 +116,11 @@ const NuanceMixChat = ({
     myModuleEvt.addListener('NuanceMixDialogPartial', handleDialogPartial);
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
-    NuanceMix.converse(null, contextTag);
+    NuanceMix.converse(null, contextTag, textOnly, avatar);
   };
 
   // First time only - start the conversation.
-  React.useEffect(() => {
+  React.useEffect((contextTag, textOnly, avater) => {
     setIsRecording(true);
     setIsEnded(false);
     myModuleEvt.addListener('NuanceMixDialogResponse', handleDialogResponse);
@@ -127,7 +129,7 @@ const NuanceMixChat = ({
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
 
-    NuanceMix.converse(null, contextTag);
+    NuanceMix.converse(null, contextTag, textOnly, avatar);
 
     return () => {
       myModuleEvt.removeAllListeners('NuanceMixDialogResponse');
@@ -226,6 +228,8 @@ NuanceMixChat.defaultProps = {
   FooterListener: DefaultFooterListener,
   LeftBubble: DefaultLeftBubble,
   RightBubble: DefaultRightBubble,
+  textOnly: false,
+  avatar: false,
 }
 
 NuanceMixChat.propTypes = {
@@ -239,6 +243,8 @@ NuanceMixChat.propTypes = {
   language: PropTypes.string,
   autoStart: PropTypes.bool,
   contextTag: PropTypes.string,
+  textOnly: PropTypes.bool,
+  avatar: PropTypes.bool,
 };
 
 // Styling for the default components. Provide an iMessage-like appearance.
