@@ -39,6 +39,9 @@ const NuanceMixChat = ({
 
   let scrollRef = React.useRef(null);
 
+
+  console.log("cleblanc " + textOnly + avatar + contextTag);
+
   const NuanceMix = NativeModules.NuanceMix;
   const myModuleEvt = new NativeEventEmitter(NativeModules.NuanceMix);
   NuanceMix.init("dlg");
@@ -96,15 +99,17 @@ const NuanceMixChat = ({
     console.log('handleDialogEnded ' + isEnded);
     setIsEnded(true);
   };
-  function handleSubmitEditing(value, contextTag, textOnly, avatar) {
+  function handleSubmitEditing() {
     myModuleEvt.addListener('NuanceMixDialogResponse', handleDialogResponse);
     myModuleEvt.addListener('NuanceMixDialogRequest', handleDialogRequest);
     myModuleEvt.addListener('NuanceMixDialogPartial', handleDialogPartial);
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
-    NuanceMix.converse(value, contextTag, textOnly, avatar);
+    console.log("cleblanc 1 " + textOnly + avatar + contextTag + value);
+
+    NuanceMix.converse(value, contextTag, textOnly ?? false, avatar ?? false);
   }
-  const converse = (contextTag, textOnly, avatar) => {
+  const converse = () => {
     if (idx!==1 && FooterProgress) {
       setIsAnimating(true);
     } 
@@ -116,11 +121,14 @@ const NuanceMixChat = ({
     myModuleEvt.addListener('NuanceMixDialogPartial', handleDialogPartial);
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
-    NuanceMix.converse(null, contextTag, textOnly, avatar);
+
+    console.log("cleblanc 2 " + textOnly + avatar + contextTag);
+
+    NuanceMix.converse(null, contextTag, textOnly ?? false, avatar ?? false);
   };
 
   // First time only - start the conversation.
-  React.useEffect((contextTag, textOnly, avater) => {
+  React.useEffect(() => {
     setIsRecording(true);
     setIsEnded(false);
     myModuleEvt.addListener('NuanceMixDialogResponse', handleDialogResponse);
@@ -128,6 +136,8 @@ const NuanceMixChat = ({
     myModuleEvt.addListener('NuanceMixDialogPartial', handleDialogPartial);
     myModuleEvt.addListener('NuanceMixDialogRecordingDone', handleDialogRecordingDone);  
     myModuleEvt.addListener('NuanceMixDialogEnded', handleDialogEnded);
+
+    console.log("cleblanc 3 " + textOnly + avatar + contextTag);
 
     NuanceMix.converse(null, contextTag, textOnly, avatar);
 
@@ -171,9 +181,9 @@ const NuanceMixChat = ({
       {FooterProgress && (<FooterProgress
               isAnimating={isAnimating}
         />)}
-      {FooterListener ? (<FooterListener
+      {!textOnly && (<FooterListener
               onPress={converse}
-        />) : (<DefaultFooterListener onPress={converse}/>)}
+        />)}
     </View>
   );
 };

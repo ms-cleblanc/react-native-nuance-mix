@@ -141,6 +141,7 @@ public class DialogActivity {
         textOnly = tO;
         avatar = A;
         Log.d(TAG, "toggleReco state " + mState.toString() + " with input " + input + " and contextTag " + contextTag);
+        Log.d(TAG, "toggleReco state " + mState.toString() + " with textOnly " + textOnly + " and avatar " + avatar);
         switch (mState) {
         case IDLE:
             dialogEnding = false;
