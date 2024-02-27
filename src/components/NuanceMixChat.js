@@ -169,11 +169,7 @@ const NuanceMixChat = ({
         }}
         ListFooterComponentStyle={{flex:1, justifyContent: 'flex-end'}}
       />
-      {FooterInput ? (<FooterInput
-              value={value}
-              onSubmitEditing={handleSubmitEditing}
-              onChangeText={(text) => onChangeText(text)}
-        />) : (<DefaultFooterInput
+      {!avatar && (<FooterInput
               value={value}
               onSubmitEditing={handleSubmitEditing}
               onChangeText={(text) => onChangeText(text)}
@@ -183,7 +179,11 @@ const NuanceMixChat = ({
         />)}
       {!textOnly && (<FooterListener
               onPress={converse}
+        />)}        
+        {avatar && (<FooterListener
+              onPress={converse}
         />)}
+        
     </View>
   );
 };
